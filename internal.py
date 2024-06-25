@@ -695,3 +695,52 @@ def _get_intrinsic_dimension(mat, percentile=.96):
     return(lm.coef_[0,0])
 
     
+
+def _calculate_mutual_information_with_clustered_dataset(cluster_labels=None,
+                                                         variable_labels=None,
+                                                         variable_bins=None):
+
+    global _verbose
+    
+    if cluster_labels is None:
+        _raise_error("Please provide cluster_labels to calculate the mutual information with")
+    
+    if variable_labels is None:
+        _raise_error("Please provide a variable to calculate the mutual information with")
+ 
+        
+
+    if variable_bins is None:
+        variable_bins = np.unique(variable_labels).shape[0]
+        
+        #if _verbose:
+        print(variable_bins)
+            
+
+    
+    cluster_bins = np.unique(cluster_labels).shape[0]
+    
+    # Calculate joint histogram
+    joint_dist, cluster_dist_edges, variable_dist_edges =\
+                                np.histogram2d(cluster_labels, 
+                                               variable_labels, 
+                                               bins=np.array([cluster_bins,variable_bins]))
+    
+    # Calculate marginal histograms
+    cluster_dist = np.histogram(cluster_labels, bins=cluster_dist_edges)[0]
+    variable_dist = np.histogram(variable_labels, bins=variable_dist_edges)[0]
+    
+    # Normalize histograms to get probability distributions
+    p_joint = joint_dist / np.sum(joint_dist)
+    p_x = cluster_dist / np.sum(cluster_dist)
+    p_y = variable_dist / np.sum(variable_dist)
+    
+    # Calculate the mutual information
+    mi = 0.0
+    for i in range(p_joint.shape[0]):
+        for j in range(p_joint.shape[1]):
+            if p_joint[i, j] > 0:
+                mi += p_joint[i, j] * np.log(p_joint[i, j] / (p_x[i] * p_y[j]))
+    
+    return mi
+    
