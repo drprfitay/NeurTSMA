@@ -172,26 +172,28 @@ def get_cluster_map(dataset_name=None,
 
 
 
-# ToDO implement this functionality
-# def calculate_mutual_information_with_clustered_dataset(matrix=None, dataset_name=None,
-#                                                          preset_name=None, clustered_labels=None,
-#                                                          variable_labels=None):
-#     """
-#     Calculates mutual information with a clustered dataset.
 
-#     Parameters:
-#     - matrix (numpy.ndarray, optional): The data matrix for the dataset.
-#     - dataset_name (str, optional): The name of the dataset.
-#     - preset_name (str, optional): The name of the preset to use.
-#     - clustered_labels (numpy.ndarray, optional): The labels obtained from clustering.
-#     - variable_labels (list, optional): The labels for variables.
+def calculate_mutual_information_with_clustered_dataset(cluster_labels=None,
+                                                        variable_labels=None,
+                                                        variable_bins=None):
 
-#     Returns:
-#     None
-#     """
+
+    """
+    Calculate the mutual information for a clustered dataset.
     
-#     pass
-
+    Parameters:
+    dataset_name (str): Name of the dataset to be used for mutual information calculation.
+    alias (str): Alias for the dataset, if any.
+    prefix (str): Prefix to be used for variable names.
+    variable_labels (list of str): List of labels for the variables in the dataset.
+    variable_bins (list of int): List of bins for each variable to discretize the data.
+    
+    Returns:
+    float: Mutual information calculated between the variables in the dataset.
+    """
+    return(internal._calculate_mutual_information_with_clustered_dataset(cluster_labels=cluster_labels,
+                                                                         variable_labels=variable_labels,
+                                                                         variable_bins=variable_bins))
 
 base_environment = "C:\\Users\\itayta\\Documents\\NeurTSMA"
 initialize_environment(base_environment)
@@ -259,10 +261,10 @@ reduced_mds = process_dataset("IC44_170518",
 
 ##### Example 4:
 isomap_pca_processing = [{'opcode': internal.BIN,    'params':  bin_params},\
-                         {'opcode': internal.FILTER, 'params':  filter_params},\
-                         {'opcode': internal.SCALE,  'params':  scale_params},\
-                         {'opcode': internal.REDUCE, 'params':  {'method':'pca', 'ndim':100}, 'alias':"pca_100"},\
-                         {'opcode': internal.REDUCE, 'params':  {'method':'isomap', 'ndim':6, 'n_neighbors':70}, 'alias':"isomap_example"}]
+                          {'opcode': internal.FILTER, 'params':  filter_params},\
+                          {'opcode': internal.SCALE,  'params':  scale_params},\
+                          {'opcode': internal.REDUCE, 'params':  {'method':'pca', 'ndim':100}, 'alias':"pca_100"},\
+                          {'opcode': internal.REDUCE, 'params':  {'method':'isomap', 'ndim':6, 'n_neighbors':70}, 'alias':"isomap_example"}]
 
 reduced_iso_pca = process_dataset("IC44_170518", 
                                   op_list=isomap_pca_processing)
@@ -271,6 +273,24 @@ clustered_iso = cluster_dataset("IC44_170518", alias="isomap_example", number_of
 
 est_dim_2 = estimate_dimensionality(dataset_name="IC44_170518", alias="pca_100")
 
+
+
+
+##### Example 5:
+
+clustered_iso = cluster_dataset("IC44_170518", alias="isomap_example", number_of_clusters=7, pointcloud_size=.58)
+linear_time_variable = np.arange(0, clustered_iso.shape[0])
+
+
+mutual_information = calculate_mutual_information_with_clustered_dataset(cluster_labels=clustered_iso, variable_labels=linear_time_variable, variable_bins=10)
+
+indices = np.round(np.random.uniform(size=1000, low=0.0, high=clustered_iso.shape[0]))
+indices = indices.astype(int) 
+zeros = np.zeros(clustered_iso.shape[0])
+zeros[indices] = 1
+random_mutual_information = calculate_mutual_information_with_clustered_dataset(cluster_labels=clustered_iso, variable_labels=zeros)
+
+mutual_information_more_bins = calculate_mutual_information_with_clustered_dataset(cluster_labels=clustered_iso, variable_labels=linear_time_variable, variable_bins=100)
 
 
 
